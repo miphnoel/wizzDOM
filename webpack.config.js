@@ -1,5 +1,6 @@
 const path = require('path');
 
+
 module.exports = {
   context: __dirname,
   entry: "./lib/wizzdom.js",

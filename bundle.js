@@ -72,79 +72,104 @@
 
 class DOMNodeCollection {
   constructor(HTMLelements) {
-    this.elements = HTMLelements;
+    this.nodes = HTMLelements;
   }
 
   each(callback){
-    this.elements.forEach(el => callback(el));
+    this.nodes.forEach(node => callback(node));
   }
 
   // HTML5 will not execute <script> tags inserted via innerHTML
   html(str) {
-    if (str) this.each(el => { el.innerHTML = str; });
-    else return this.elements[0].innerHTML;
+    if (typeof str === 'string') {
+      this.each(node => node.innerHTML = str);
+    } else {
+      return this.nodes[0].innerHTML;
+    }
   }
 
-  // Clears content of all elements
+  // Clears content of all nodes
   empty() {
     this.html('');
   }
 
   // Can accept wizzDOM collection, HTML element, or string
   append(arg) {
-    (arg instanceof Array)
-      ? arg.forEach(child => {
+    (arg instanceof DOMNodeCollection)
+      ? arg.each(child => {
           this.each(parent => { parent.innerHTML += child.outerHTML; });
         })
       : this.each(el => { el.innerHTML += arg; });
   }
 
+
+
   attr(attrName, attrValue) {
-    if (attrValue) this.each(el => el.setAttribute(attrName, attrValue));
-    else this.each(el => el.getAttribute(attrName));
+    return (attrValue)
+      ? this.each(node => node.setAttribute(attrName, attrValue))
+      : this.nodes[0].getAttribute(attrName);
   }
 
   addClass(className) {
-    this.each(el => {
-      if (!el.classList.includes(className)) el.classList.add(className);
-    });
+    this.each(node => node.classList.add(className));
   }
 
   removeClass(className) {
-    this.each((el) => el.classList.remove(className));
+    this.each(node => node.classList.remove(className));
   }
 
+  toggleClass(className) {
+    this.each(node => node.classList.toggle(className));
+  }
 
   children() {
     const allChildren = [];
-    this.each(el => allChildren.push(...el.children));
+    this.each(node => allChildren.push(...node.children));
     return new DOMNodeCollection(allChildren);
   }
 
   parent() {
     const allParents = [];
-    this.each(el => allParents.push(el.parent));
+    this.each(node => {
+      const parent = node.parentNode;
+      if (!parent.included) {
+        allParents.push(parent);
+        parent.included = true;
+      }});
+    allParents.forEach(node => node.included = false);
     return new DOMNodeCollection(allParents);
   }
 
   find(selector) {
     const allDescendants = [];
-    this.each(el => allDescendants.push(...el.querySelectorAll(selector)));
+    this.each(node => allDescendants.push(...node.querySelectorAll(selector)));
     return new DOMNodeCollection(allDescendants);
   }
 
   remove() {
-    this.empty();
-    this.elements = [];
+    this.each(node => node.parentNode.removeChild(node));
   }
 
   on(action, callback) {
-    this.each(el => el.addEventListener(action, callback));
-    this.callback = callback;
+    this.each(node => {
+      node.addEventListener(action, callback);
+      const eventKey = `wizz${action}`;
+      node[eventKey] = (node[eventKey])
+       ? node[eventKey].push(callback)
+       : [callback];
+     });
   }
 
   off(action) {
-    this.each(el => el.removeEventListener(action, this.callback));
+    this.each(node => {
+      const eventKey = `wizz${action}`;
+      if (node[eventKey]) {
+        node[eventKey].forEach(callback => {
+          node.removeEventListener(action, callback);
+        });
+      }
+      node[eventKey] = [];
+    });
   }
 }
 
@@ -169,7 +194,6 @@ function $w(arg) {
     else docReadyCallbacks.push(arg);
     return;
   }
-
   const arrayEl = (arg instanceof HTMLElement)
     ? [arg]
     : Array.from(document.querySelectorAll(arg));
@@ -177,35 +201,58 @@ function $w(arg) {
   return new DOMNodeCollection(arrayEl);
 }
 
-Function.prototype.extend = function(firstObj, ...objects) {
-  for (let i = 0; i < objects.length; i++) {
-    for (let key in objects[i]) {
-      if (firstObj.hasOwnProperty(key)) firstObj[key] = objects[i][key];
+$w.extend = (base, ...objects) => {
+  objects.forEach( obj => {
+    for (let key in obj) {
+      base[key] = obj[key];
+    }
+  });
+  return base;
+};
+
+$w.ajax = (options) => {
+  return new Promise(function(resolve, reject) {
+    const defaults = {
+      contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+      method: "GET",
+      url: window.location.href,
+      data: {},
+      success: {},
+      error: {}
+    };
+
+    options.method = options.method.toUpperCase();
+    if (options.method === "GET" && options.hasOwnProperty("data")) {
+      options.url += "?" + toQuery(options.data);
+    }
+
+    const opts = $w.extend(defaults, options);
+
+    const xhr = new XMLHttpRequest();
+    xhr.open(opts.method, opts.url, true);
+    xhr.onload = e => {
+      if (xhr.status < 400) {
+         opts.success(xhr.response);
+         resolve(xhr.response);
+       } else {
+         opts.error(xhr.response);
+         reject(xhr.response);
+        }
+      };
+
+    xhr.send(JSON.stringify(opts.data));
+  });
+};
+
+function toQuery(data) {
+  let result = "";
+  for (let prop in data) {
+    if (data.hasOwnProperty(prop)) {
+      result += prop + "=" + data[prop] +"&";
     }
   }
-  return firstObj;
-};
-
-Function.prototype.ajax = function(options) {
-  const defaults = {
-    method: "GET",
-    url: window.location.href,
-    dataType: "json",
-    data: {},
-    success: (data) => console.log(data),
-    error: (err) => console.log(err)
-  };
-
-  const opts = this.extend(defaults, options);
-
-  const xhr = new XMLHttpRequest();
-  xhr.open(opts.method, opts.url);
-  xhr.onload = (xhr.status < 400) ? opts.success(xhr.response) : opts.error(xhr.response); // passing in the data for
-  xhr.responseType = opts.dataType;
-  xhr.send(opts.data);
-};
-
-window.$w = $w;
+  return result.slice(0, -1);
+}
 
 
 /***/ })

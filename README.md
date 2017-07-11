@@ -26,7 +26,9 @@ wizzDOM is a lightweight JavaScript DOM interaction library, which allows users 
   * [`css`](#css)  
   * [`addClass`](#addclass)  
   * [`removeClass`](#removeclass)  
-  * [`toggleClass`](#toggleclass)  
+  * [`toggleClass`](#toggleclass)
+  * [`hasClass`](#hasclass)
+
 
 [Event Listeners](#event-listeners)  
   * [`on`](#on)  
@@ -132,6 +134,9 @@ Takes a `class`, and removes it from every `DOMNodeCollection` element.
 
 Takes a `class`, adds it to every `DOMNodeCollection` element that *does not* have it, and removes it from every `DOMNodeCollection` element that *does* have it.
 
+#### `hasClass`
+
+Takes a `class`, returns true if any `DOMNodeCollection` element's classList contains the given class.
 
 ### Event Listeners
 

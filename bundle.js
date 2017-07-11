@@ -99,7 +99,7 @@ class DOMNodeCollection {
       ? arg.each(child => {
           this.each(parent => { parent.innerHTML += child.outerHTML; });
         })
-      : this.each(el => { el.innerHTML += arg; });
+      : this.each(el => el.innerHTML += arg);
   }
 
 
@@ -141,8 +141,11 @@ class DOMNodeCollection {
   }
 
   find(selector) {
-    const allDescendants = [];
-    this.each(node => allDescendants.push(...node.querySelectorAll(selector)));
+    let allDescendants = [];
+    this.each(node => {
+      let nodeDescendants = node.querySelectorAll(selector);
+      allDescendants = allDescendants.concat(nodeDescendants);
+    });
     return new DOMNodeCollection(allDescendants);
   }
 
@@ -188,17 +191,34 @@ document.addEventListener('DOMContentLoaded', () => {
   docReadyCallbacks.forEach(callback => callback());
 });
 
-function $w(arg) {
+const $w = (arg) => {
   if (arg instanceof Function) {
     if (document.readyState === 'complete') arg();
     else docReadyCallbacks.push(arg);
     return;
   }
-  const arrayEl = (arg instanceof HTMLElement)
-    ? [arg]
-    : Array.from(document.querySelectorAll(arg));
 
-  return new DOMNodeCollection(arrayEl);
+  let nodeArray;
+  if (typeof arg === "string") {
+    if (arg[0] === '<') nodeArray = parseHTML(arg);
+    else nodeArray = document.querySelectorAll(arg);
+  } else if (arg instanceof HTMLElement) {
+    nodeArray = [arg]
+  }
+
+  return new DOMNodeCollection(nodeArray);
+}
+
+const parseHTML = (string) => {
+  let tag = "";
+  for (let i = 1; i < string.length; i++) {
+    if (string[i] === '>') break;
+    tag += string[i];
+  }
+  const innerHTML = string.slice(tag.length + 2, string.length - (tag.length + 3));
+  const newEl = document.createElement(tag);
+  newEl.innerHTMl = innerHTML;
+  return [newEl];
 }
 
 $w.extend = (base, ...objects) => {
@@ -254,6 +274,9 @@ function toQuery(data) {
   return result.slice(0, -1);
 }
 
+window.$w = $w;
+
 
 /***/ })
 /******/ ]);
+//# sourceMappingURL=bundle.js.map

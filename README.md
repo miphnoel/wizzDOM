@@ -41,7 +41,7 @@ wizzDOM is a lightweight JavaScript DOM interaction library, which allows users 
   * Query the document, then wrap the selected HTML elements in a `DOMNodeCollection` object.
 
 
-2. `$w`(**'HTML string'**) _**TODO - implement tomorrow 7/5**_
+2. `$w`(**'HTML string'**)
   * Construct a new HTML element, then wrap it in a `DOMNodeCollection` object.
 
 

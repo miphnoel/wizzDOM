@@ -7,6 +7,8 @@ wizzDOM is a lightweight JavaScript DOM interaction library, which allows users 
   * Add and remove event handlers
   * Simplify Ajax requests
 
+For a live demo, check out this [melody sequencer built with wizzDOM](https://miphnoel.github.io/tuneLoop/)!
+
 ## API
 
 [`$w`](#w)  

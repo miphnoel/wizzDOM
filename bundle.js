@@ -95,11 +95,17 @@ class DOMNodeCollection {
 
   // Can accept wizzDOM collection, HTML element, or string
   append(arg) {
-    (arg instanceof DOMNodeCollection)
-      ? arg.each(child => {
-          this.each(parent => { parent.innerHTML += child.outerHTML; });
-        })
-      : this.each(el => el.innerHTML += arg);
+    if (arg instanceof HTMLElement) {
+      arg = $w(arg);
+    }
+
+    if (typeof arg === "string") {
+      this.each(node => node.innerHTML += arg);
+    } else if (arg instanceof DOMNodeCollection) {
+      this.each(node => {
+        arg.each(child => node.appendChild(child.cloneNode(true)));
+      });
+    }
   }
 
 
@@ -126,6 +132,14 @@ class DOMNodeCollection {
 
   toggleClass(className) {
     this.each(node => node.classList.toggle(className));
+  }
+
+  hasClass(className) {
+    let result = false;
+    this.each(node => {
+      if (node.classList.contains(className)) result = true;
+    });
+    return result;
   }
 
   children() {

@@ -23,6 +23,7 @@ wizzDOM is a lightweight JavaScript DOM interaction library, which allows users 
   * [`append`](#append)  
   * [`remove`](#remove)  
   * [`attr`](#attr)  
+  * [`css`](#css)  
   * [`addClass`](#addclass)  
   * [`removeClass`](#removeclass)  
   * [`toggleClass`](#toggleclass)  
@@ -109,9 +110,15 @@ Remove all `DOMNodeCollection` elements from the DOM.
 
 #### `attr`
 
-If given (`attr_name`, `attr_value`), sets the attribute (`attr_name`) to the value (`attr_value`) for all `DOMNodeCollection` elements.
+If given (`attrName`, `attrValue`), sets the attribute (`attrName`) to the value (`attrValue`) for all `DOMNodeCollection` elements.
 
-If passed only `attr_name`, retrieves the value of attribute (`attr_name`) for the first `DOMNodeCollection` element.
+If passed only `attrName`, retrieves the value of attribute (`attrName`) for the first `DOMNodeCollection` element.
+
+#### `css`
+
+If given (`styleName`, `styleValue`), sets the CSS property (`styleName`) to the value (`styleValue`) within the `style` property of all `DOMNodeCollection` elements.
+
+If passed only `styleName`, retrieves the value of CSS property (`styleName`) from  the first `DOMNodeCollection` element's style property.
 
 #### `addClass`
 
@@ -124,6 +131,7 @@ Takes a `class`, and removes it from every `DOMNodeCollection` element.
 #### `toggleClass`
 
 Takes a `class`, adds it to every `DOMNodeCollection` element that *does not* have it, and removes it from every `DOMNodeCollection` element that *does* have it.
+
 
 ### Event Listeners
 
